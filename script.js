@@ -1,53 +1,57 @@
-// Array of product objects
-const cart = [
-    { name: "Laptop", price: 50000, quantity: 1 },
-    { name: "Mouse", price: 500, quantity: 2 },
-    { name: "Keyboard", price: 1500, quantity: 1 },
-    { name: "Headphones", price: 2000, quantity: 1 }
-];
+async function searchMovie() {
+  // Get the movie name from input box
+  const movieInput = document.getElementById("movieInput");
+  const movieName = movieInput.value.trim();
 
-// Button click event
-document.getElementById("calcBtn").addEventListener("click", calculateBill);
+  // Get the result display section
+  const resultDiv = document.getElementById("movieResult");
 
-function calculateBill() {
-    let totalPrice = 0;
+  // If user enters nothing
+  if (movieName === "") {
+    resultDiv.innerHTML = "<p>⚠️ Please enter a movie name.</p>";
+    return;
+  }
 
-    // Loop to calculate total price
-    for (let i = 0; i < cart.length; i++) {
-        totalPrice += cart[i].price * cart[i].quantity;
+  // OMDb API Key (Replace with your own key)
+  const apiKey = "YOUR_API_KEY";
+
+  // Create API URL
+  const apiURL = `https://www.omdbapi.com/?t=${movieName}&apikey=${apiKey}`;
+
+  try {
+    // Fetch movie data from OMDb API
+    const response = await fetch(apiURL);
+    const data = await response.json();
+
+    // If movie is not found
+    if (data.Response === "False") {
+      resultDiv.innerHTML = "<p>❌ Movie not found. Try another name.</p>";
+      return;
     }
 
-    console.log("Total price before discount:", totalPrice);
+    // If poster is not available
+    const poster =
+      data.Poster !== "N/A"
+        ? data.Poster
+        : "https://via.placeholder.com/200x300?text=No+Poster";
 
-    // if-else for discount
-    let discount = 0;
-    if (totalPrice >= 50000) {
-        discount = totalPrice * 0.20; // 20% discount
-    } else if (totalPrice >= 20000) {
-        discount = totalPrice * 0.10; // 10% discount
-    }
+    // Display movie details
+    resultDiv.innerHTML = `
+      <div class="movie-card">
+        <img src="${poster}" alt="Movie Poster">
 
-    let finalAmount = totalPrice - discount;
-    console.log("Discount applied:", discount);
-    console.log("Final amount after discount:", finalAmount);
+        <h2>${data.Title}</h2>
 
-    // switch case for payment mode
-    let paymentMode = "UPI"; // Change to CASH / CARD / UPI
+        <p><strong>Year:</strong> ${data.Year}</p>
+        <p><strong>Genre:</strong> ${data.Genre}</p>
+        <p><strong>IMDB Rating:</strong> ⭐ ${data.imdbRating}</p>
+      </div>
+    `;
+  } catch (error) {
+    // Show error message if something goes wrong
+    resultDiv.innerHTML =
+      "<p>⚠️ Something went wrong. Please check your internet or API key.</p>";
 
-    switch (paymentMode) {
-        case "CASH":
-            console.log("Payment Mode: Cash");
-            break;
-        case "CARD":
-            console.log("Payment Mode: Credit/Debit Card");
-            break;
-        case "UPI":
-            console.log("Payment Mode: UPI");
-            break;
-        default:
-            console.log("Invalid payment mode");
-    }
-
-    console.log("Payment successful. Thank you for shopping!");
-    console.log("--------------------------------------------");
+    console.error("Error fetching movie data:", error);
+  }
 }
